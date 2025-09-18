@@ -18,6 +18,9 @@ class Course(models.Model):
         help_text="Укажите описание курса",
     )
 
+    def __str__(self):
+        return f"{self.title}"
+
     class Meta:
         verbose_name = "Курс"
         verbose_name = "Курсы"
@@ -30,6 +33,7 @@ class Lesson(models.Model):
         null=True,
         verbose_name="Курс",
         help_text="Выберите курс",
+        related_name="lessons",
     )
     title = models.CharField(
         max_length=50,
@@ -48,4 +52,15 @@ class Lesson(models.Model):
         verbose_name="Описание урока",
         help_text="Укажите описание урока",
     )
-    video_link = models.URLField(verbose_name="Сслыка на видео", null=True, blank=True)
+    video_link = models.URLField(
+        verbose_name="Сслыка на видео",
+        null=True,
+        blank=True
+    )
+
+    def __str__(self):
+        return f"{self.title}"
+
+    class Meta:
+        verbose_name = "Урок"
+        verbose_name = "Уроки"
