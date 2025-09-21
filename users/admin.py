@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from users.models import User, Payment
+from users.models import Payment, User
 
 
 @admin.register(User)
@@ -15,7 +15,15 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "date", "paid_course","paid_lesson", "amount", "method")
+    list_display = (
+        "id",
+        "user",
+        "date",
+        "paid_course",
+        "paid_lesson",
+        "amount",
+        "method",
+    )
     list_filter = ("user", "method")
     search_fields = (
         "user",
