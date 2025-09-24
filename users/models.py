@@ -27,20 +27,20 @@ class User(AbstractUser):
 class Payment(models.Model):
     payment_methods = [("transfer", "Перевод на счет"), ("cash", "Наличными")]
     user = models.ForeignKey(
-        'users.User', on_delete=models.DO_NOTHING, verbose_name="Пользователь"
+        "users.User", on_delete=models.DO_NOTHING, verbose_name="Пользователь"
     )
     date = models.DateField(
         verbose_name="Дата оплаты",
     )
     paid_lesson = models.ForeignKey(
-        'materials.Lesson',
+        "materials.Lesson",
         verbose_name="Купленный урок",
         on_delete=models.CASCADE,
         blank=True,
         null=True,
     )
     paid_course = models.ForeignKey(
-        'materials.Course',
+        "materials.Course",
         verbose_name="Купленный курс",
         on_delete=models.CASCADE,
         blank=True,
@@ -50,3 +50,14 @@ class Payment(models.Model):
         verbose_name="Сумма оплаты",
     )
     method = models.CharField(choices=payment_methods)
+
+
+class Subscription(models.Model):
+    user = models.ForeignKey(
+        "users.User",
+        verbose_name="Пользователь подписки",
+        on_delete=models.CASCADE,
+    )
+    course = models.ForeignKey(
+        "materials.Course", verbose_name="Курс подписки", on_delete=models.CASCADE
+    )
