@@ -1,9 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.db import models
-
-from materials.models import Course, Lesson
 
 
 class User(AbstractUser):
@@ -24,33 +20,31 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
 
     class Meta:
-        verbose_name = ("Пользователь",)
+        verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
 
 
 class Payment(models.Model):
     payment_methods = [("transfer", "Перевод на счет"), ("cash", "Наличными")]
     user = models.ForeignKey(
-        User,
-        on_delete=models.DO_NOTHING,
-        verbose_name="Пользователь"
+        'users.User', on_delete=models.DO_NOTHING, verbose_name="Пользователь"
     )
     date = models.DateField(
         verbose_name="Дата оплаты",
     )
     paid_lesson = models.ForeignKey(
-        Lesson,
-        verbose_name='Купленный урок',
+        'materials.Lesson',
+        verbose_name="Купленный урок",
         on_delete=models.CASCADE,
         blank=True,
-        null=True
+        null=True,
     )
     paid_course = models.ForeignKey(
-        Course,
-        verbose_name='Купленный курс',
+        'materials.Course',
+        verbose_name="Купленный курс",
         on_delete=models.CASCADE,
         blank=True,
-        null=True
+        null=True,
     )
     amount = models.PositiveIntegerField(
         verbose_name="Сумма оплаты",
