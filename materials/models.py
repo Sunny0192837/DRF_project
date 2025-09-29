@@ -18,7 +18,7 @@ class Course(models.Model):
         help_text="Укажите описание курса",
     )
     owner = models.ForeignKey(
-        'users.User',
+        "users.User",
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
@@ -35,7 +35,7 @@ class Course(models.Model):
 
 class Lesson(models.Model):
     course = models.ForeignKey(
-        'materials.Course',
+        "materials.Course",
         on_delete=models.SET_NULL,
         null=True,
         verbose_name="Курс",
@@ -61,7 +61,7 @@ class Lesson(models.Model):
     )
     video_link = models.URLField(verbose_name="Ссылка на видео", null=True, blank=True)
     owner = models.ForeignKey(
-        'users.User',
+        "users.User",
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
