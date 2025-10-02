@@ -1,3 +1,4 @@
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
@@ -17,14 +18,50 @@ from users.permissions import IsModerator, IsOwner
 
 
 class CourseViewSet(ModelViewSet):
+    """
+    API endpoint для управления курсами.
+
+    list:
+    Возвращает список курсов.
+    - Модераторы видят все курсы
+    - Обычные пользователи видят только свои курсы
+
+    retrieve:
+    Возвращает детальную информацию о курсе.
+    - Доступно модераторам и владельцу курса
+
+    create:
+    Создает новый курс.
+    - Только для немодераторов
+    - Владелец устанавливается автоматически
+
+    update:
+    Полностью обновляет курс.
+    - Доступно модераторам и владельцу
+
+    partial_update:
+    Частично обновляет курс.
+    - Доступно модераторам и владельцу
+
+    destroy:
+    Удаляет курс.
+    - Только для владельца
+    - Модераторы не могут удалять курсы
+    """
+
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
     pagination_class = CoursePaginator
 
     def get_queryset(self):
         queryset = Course.objects.all()
-        if not self.request.user.groups.filter(name="Moderators").exists():
-            queryset = queryset.filter(owner=self.request.user)
+
+        if self.request.user.is_authenticated:
+            if not self.request.user.groups.filter(name="Moderators").exists():
+                queryset = queryset.filter(owner=self.request.user)
+        else:
+            queryset = queryset.none()
+
         return queryset
 
     def get_serializer_class(self):
@@ -48,6 +85,9 @@ class CourseViewSet(ModelViewSet):
 
 
 class LessonCreateAPIView(generics.CreateAPIView):
+    """
+    Представление создания урока.
+    """
     serializer_class = LessonSerializer
     permission_classes = [~IsModerator, IsAuthenticated]
 
@@ -56,6 +96,10 @@ class LessonCreateAPIView(generics.CreateAPIView):
 
 
 class LessonListAPIView(generics.ListAPIView):
+    """
+    Представление списка уроков.
+    """
+
     serializer_class = LessonSerializer
     permission_classes = [IsAuthenticated, IsModerator | IsOwner]
     pagination_class = LessonPaginator
@@ -68,23 +112,41 @@ class LessonListAPIView(generics.ListAPIView):
 
 
 class LessonRetrieveAPIView(generics.RetrieveAPIView):
+    """
+    Представление одного урока.
+    """
+
     serializer_class = LessonSerializer
     queryset = Lesson.objects.all()
     permission_classes = [IsAuthenticated, IsModerator | IsOwner]
 
 
 class LessonUpdateAPIView(generics.UpdateAPIView):
+    """
+    Представление обновления урока.
+    """
+
     serializer_class = LessonSerializer
     queryset = Lesson.objects.all()
     permission_classes = [IsAuthenticated, IsModerator | IsOwner]
 
 
 class LessonDestroyAPIView(generics.DestroyAPIView):
+    """
+    Представление удаления урока.
+    """
+
     queryset = Lesson.objects.all()
     permission_classes = [~IsModerator & IsOwner]
 
 
 class SubscriptionSwitchView(APIView):
+    """
+    Представление переключения подписки на курс.
+    """
+
+    @swagger_auto_schema(operation_description="Пост запрос с параметрами: id курса, \
+                                                на который меняем статус подписки для текущего пользователя")
     def post(self, *args, **kwargs):
         user = self.request.user
         course_id = self.request.data.get("id")
