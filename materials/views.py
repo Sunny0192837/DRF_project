@@ -1,5 +1,6 @@
+from django.core.mail import send_mail
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -13,6 +14,7 @@ from materials.serializers import (
     CourseSerializer,
     LessonSerializer,
 )
+from materials.tasks import send_course_update_mail
 from users.models import Subscription
 from users.permissions import IsModerator, IsOwner
 
@@ -82,6 +84,14 @@ class CourseViewSet(ModelViewSet):
         elif self.action == "destroy":
             self.permission_classes = [~IsModerator & IsOwner]
         return super().get_permissions()
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        response = super().partial_update(request, *args, **kwargs)
+        if response.status_code == status.HTTP_200_OK:
+            send_course_update_mail.delay(instance.pk, instance.title)
+            print('success')
+        return response
 
 
 class LessonCreateAPIView(generics.CreateAPIView):
