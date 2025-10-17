@@ -1,3 +1,4 @@
+from django.contrib.auth.models import Group
 from django.core.management import BaseCommand
 
 from materials.models import Course, Lesson
@@ -11,6 +12,7 @@ class Command(BaseCommand):
         Course.objects.all().delete()
         Lesson.objects.all().delete()
         Payment.objects.all().delete()
+        Group.objects.get_or_create(name='Moderators')
 
         moder = User.objects.get_or_create(email="moderator@example.com")[0]
         moder.set_password("123qweasdzxc")

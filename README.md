@@ -1,32 +1,29 @@
-# Проект по DRF(django rest framework)
+# Django REST Framework Project with Docker
 
-### Структура проекта:
+Этот проект представляет собой Django REST Framework (DRF) приложение, сконтейнеризированное с помощью Docker. В качестве зависимостей используются PostgreSQL в качестве базы данных, Redis в качестве брокера и бэкенда для результатов Celery, а также Celery Beat для выполнения периодических задач.
 
-project_root/  
-├── materials/ 
-│   ├── migrations/  
-│   ├── __init__.py  
-│   ├── admin.py  
-│   ├── forms.py  
-│   ├── apps.py  
-│   ├── models.py  
-│   ├── serializers.py  
-│   ├── urls.py  
-│   └── views.py  
-├── config/  
-├── .gitignore  
-├── .env.sample  
-├── manage.py  
-├── README.md  
-├── poetry.lock    
-└── pyproject.toml   
+## Стек технологий
 
-**materials/** - приложение, содержащее модели lesson и course
+*   **Backend:** Django, Django REST Framework (DRF)
+*   **Database:** PostgreSQL
+*   **Queue & Cache:** Redis
+*   **Async Tasks:** Celery
+*   **Scheduler:** Celery Beat
+*   **Containerization:** Docker, Docker Compose
 
-**users/** - приложение для аутентификации пользователя
+## Предварительные требования
 
-**сonfig/** - пакет, содержащий настройки фреймворка django
+Перед началом убедитесь, что на вашей машине установлены:
+*   [Docker](https://docs.docker.com/get-docker/)
+*   [Docker Compose](https://docs.docker.com/compose/install/)
+*   Создайте в корне проекта .env файл и заполните его по шаблону .env_sample
 
-**manage.py** - скрипт, точка входа, запускает сервер на локалхосте
+## Запуск проекта
 
-**pyproject.toml** - файл с зависимостями
+Следуйте этим шагам, чтобы запустить проект локально.
+
+### 1. Клонирование репозитория
+
+```bash
+git clone <your-repository-url>
+cd <your-project-directory>
