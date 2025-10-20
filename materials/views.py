@@ -1,0 +1,173 @@
+from django.core.mail import send_mail
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import generics, status
+from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
+
+from materials.models import Course, Lesson
+from materials.paginators import LessonPaginator, CoursePaginator
+from materials.serializers import (
+    CourseDetailSerializer,
+    CourseSerializer,
+    LessonSerializer,
+)
+from materials.tasks import send_course_update_mail
+from users.models import Subscription
+from users.permissions import IsModerator, IsOwner
+
+
+class CourseViewSet(ModelViewSet):
+    """
+    API endpoint для управления курсами.
+
+    list:
+    Возвращает список курсов.
+    - Модераторы видят все курсы
+    - Обычные пользователи видят только свои курсы
+
+    retrieve:
+    Возвращает детальную информацию о курсе.
+    - Доступно модераторам и владельцу курса
+
+    create:
+    Создает новый курс.
+    - Только для немодераторов
+    - Владелец устанавливается автоматически
+
+    update:
+    Полностью обновляет курс.
+    - Доступно модераторам и владельцу
+
+    partial_update:
+    Частично обновляет курс.
+    - Доступно модераторам и владельцу
+
+    destroy:
+    Удаляет курс.
+    - Только для владельца
+    - Модераторы не могут удалять курсы
+    """
+
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
+    pagination_class = CoursePaginator
+
+    def get_queryset(self):
+        queryset = Course.objects.all()
+
+        if self.request.user.is_authenticated:
+            if not self.request.user.groups.filter(name="Moderators").exists():
+                queryset = queryset.filter(owner=self.request.user)
+        else:
+            queryset = queryset.none()
+
+        return queryset
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return CourseDetailSerializer
+        return CourseSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+    def get_permissions(self):
+        if self.action == "create":
+            self.permission_classes = [~IsModerator]
+        elif self.action in ["update", "partial_update", "retrieve"]:
+            self.permission_classes = [
+                IsModerator | IsOwner,
+            ]
+        elif self.action == "destroy":
+            self.permission_classes = [~IsModerator & IsOwner]
+        return super().get_permissions()
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        response = super().partial_update(request, *args, **kwargs)
+        if response.status_code == status.HTTP_200_OK:
+            send_course_update_mail.delay(instance.pk, instance.title)
+            print('success')
+        return response
+
+
+class LessonCreateAPIView(generics.CreateAPIView):
+    """
+    Представление создания урока.
+    """
+    serializer_class = LessonSerializer
+    permission_classes = [~IsModerator, IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+
+class LessonListAPIView(generics.ListAPIView):
+    """
+    Представление списка уроков.
+    """
+
+    serializer_class = LessonSerializer
+    permission_classes = [IsAuthenticated, IsModerator | IsOwner]
+    pagination_class = LessonPaginator
+
+    def get_queryset(self):
+        queryset = Lesson.objects.all()
+        if not self.request.user.groups.filter(name="Moderators").exists():
+            queryset = queryset.filter(owner=self.request.user)
+        return queryset
+
+
+class LessonRetrieveAPIView(generics.RetrieveAPIView):
+    """
+    Представление одного урока.
+    """
+
+    serializer_class = LessonSerializer
+    queryset = Lesson.objects.all()
+    permission_classes = [IsAuthenticated, IsModerator | IsOwner]
+
+
+class LessonUpdateAPIView(generics.UpdateAPIView):
+    """
+    Представление обновления урока.
+    """
+
+    serializer_class = LessonSerializer
+    queryset = Lesson.objects.all()
+    permission_classes = [IsAuthenticated, IsModerator | IsOwner]
+
+
+class LessonDestroyAPIView(generics.DestroyAPIView):
+    """
+    Представление удаления урока.
+    """
+
+    queryset = Lesson.objects.all()
+    permission_classes = [~IsModerator & IsOwner]
+
+
+class SubscriptionSwitchView(APIView):
+    """
+    Представление переключения подписки на курс.
+    """
+
+    @swagger_auto_schema(operation_description="Пост запрос с параметрами: id курса, \
+                                                на который меняем статус подписки для текущего пользователя")
+    def post(self, *args, **kwargs):
+        user = self.request.user
+        course_id = self.request.data.get("id")
+        course_item = get_object_or_404(Course, id=course_id)
+        subs_item = Subscription.objects.filter(course=course_item, user=user)
+
+        if subs_item.exists():
+            subs_item.delete()
+            message = "Подписка удалена"
+        else:
+            Subscription.objects.create(course=course_item, user=user)
+            message = "Подписка добавлена"
+
+        return Response({"course_id": course_id, "message": message})
