@@ -82,6 +82,37 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
 
+      - name: Debug SSH Key
+        run: |
+          echo "Checking SSH key format..."
+          KEY="${{ secrets.PRIVATE_SSH_KEY }}"
+          echo "Key starts with: ${KEY:0:50}"
+          echo "Key ends with: ${KEY: -50}"
+          echo "Key contains BEGIN: $(echo "$KEY" | grep -q "BEGIN" && echo "YES" || echo "NO")"
+          echo "Key contains PRIVATE: $(echo "$KEY" | grep -q "PRIVATE" && echo "YES" || echo "NO")"
+
+      - name: Create SSH key file
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PRIVATE_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          echo "Key file created:"
+          ls -la ~/.ssh/deploy_key
+          echo "First line of key file:"
+          head -1 ~/.ssh/deploy_key
+
+      - name: Test SSH connection
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key_path: ~/.ssh/deploy_key
+          port: 22
+          script: |
+            echo "SSH connection successful!"
+            whoami
+            pwd
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
