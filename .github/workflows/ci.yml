@@ -110,7 +110,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /app
+            cd /home/aboba/app
             docker-compose pull web || true
             docker-compose up -d --no-deps --build web
             docker system prune -f
