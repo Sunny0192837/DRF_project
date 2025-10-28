@@ -11,7 +11,7 @@ jobs:
         image: postgres:16
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: 12345
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: drf
         ports:
           - 5432:5432
@@ -30,9 +30,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
-    env:
-      SECRET_KEY: django-insecure-test-key-for-ci-123456
 
     steps:
       - name: Check out code
@@ -101,8 +98,6 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             cd /app
-            docker-compose down
-            docker-compose pull || true
-            docker-compose build --no-cache
-            docker-compose up -d
+            docker-compose pull web || true
+            docker-compose up -d --no-deps --build web
             docker system prune -f
