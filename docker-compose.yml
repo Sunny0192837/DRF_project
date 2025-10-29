@@ -24,7 +24,6 @@ services:
     restart: unless-stopped
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - "5432:5432"
 
   celery_worker:
     build: .
