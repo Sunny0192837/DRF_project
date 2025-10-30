@@ -39,7 +39,7 @@ services:
 
   celery_beat:
     build: .
-    command: celery -A config beat --loglevel=info
+    command: celery -A config beat --loglevel=info -P eventlet
     volumes:
       - .:/app
     env_file:
