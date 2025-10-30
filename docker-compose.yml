@@ -9,8 +9,8 @@ services:
              gunicorn config.wsgi:application --bind 0.0.0.0:8000"
     volumes:
       - .:/app
-      - staticfiles:/app/static
-      - media_volume:/app/media
+      - staticfiles:/app/static/
+      - media_volume:/app/media/
     expose:
       - "8000"
     env_file:
@@ -44,7 +44,7 @@ services:
 
   celery_beat:
     build: .
-    command: celery -A config beat --loglevel=info -P eventlet
+    command: celery -A config beat --loglevel=info
     volumes:
       - .:/app
     env_file:
