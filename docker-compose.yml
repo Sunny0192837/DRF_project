@@ -63,7 +63,7 @@ services:
       - redis_data:/data
 
   nginx:
-    image: nginx:1.29.2
+    image: nginx:stable-alpine
     ports:
       - "80:80"
     volumes:
