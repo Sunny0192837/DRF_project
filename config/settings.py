@@ -183,3 +183,6 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': timedelta(seconds=5),
     },
 }
+
+STATIC_ROOT = "/app/staticfiles"
+STATICFILES_DIRS = "/app/static"
