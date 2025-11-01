@@ -24,6 +24,7 @@ drf-yasg==1.21.11
 eventlet==0.40.3
 executing==2.2.1
 greenlet==3.2.4
+gunicorn==23.0.0
 idna==3.11
 inflection==0.5.1
 ipython==9.6.0
